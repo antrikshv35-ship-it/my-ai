@@ -1,50 +1,33 @@
+<script>
+const API_KEY = '' 
 
-<!DOCTYPE html>
-<html>
-<head>
-    <title>My AI</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-        body {background: #1a1a1a; color: white; font-family: Arial; margin: 0; padding: 20px;}
-       .header {color: #8b5cf6; font-size: 24px; font-weight: bold; margin-bottom: 20px; text-align: center;}
-       .chat-box {height: 70vh; overflow-y: auto; margin-bottom: 80px;}
-       .msg {background: #2d2d2d; padding: 12px; border-radius: 10px; margin: 10px 0;}
-       .user {background: #3d3d3d; margin-left: 20%;}
-       .ai {margin-right: 20%;}
-       .input-area {display: flex; gap: 10px; position: fixed; bottom: 20px; left: 5%; width: 90%;}
-        input {flex: 1; padding: 12px; border-radius: 20px; border: none; background: #2d2d2d; color: white;}
-        button {background: #8b5cf6; border: none; border-radius: 50%; width: 45px; height: 45px; color: white; font-size: 18px;}
-    </style>
-</head>
-<body>
-    <div class="header">✨ My AI</div>
-    <div class="chat-box" id="chat">
-        <div class="msg ai">🤖 My AI: Hello! Mai free AI hun. Kuch pucho.</div>
-    </div>
-    <div class="input-area">
-        <input type="text" id="userInput" placeholder="Ask My AI..." onkeypress="if(event.key==='Enter') sendMsg()">
-        <button onclick="sendMsg()">➤</button>
-    </div>
-
-    <script>
-        async function sendMsg() {
-            let input = document.getElementById("userInput");
-            let chat = document.getElementById("chat");
-            if(input.value == "") return;
-            let userText = input.value;
-            chat.innerHTML += `<div class="msg user">👤 ${userText}</div>`;
-            chat.innerHTML += `<div class="msg ai" id="loading">🤖 Soch raha hun...</div>`;
-            input.value = "";
-            chat.scrollTop = chat.scrollHeight;
-
-            let response = await fetch(`https://api.duckgo.com/?q=${userText}&format=json`);
-            let data = await response.json();
-            let aiReply = data.AbstractText || "Mujhe samajh nahi aaya. Dobara pucho.";
-            
-            document.getElementById("loading").remove();
-            chat.innerHTML += `<div class="msg ai">🤖 ${aiReply}</div>`;
-            chat.scrollTop = chat.scrollHeight;
-        }
-    </script>
-</body>
-</html>
+async function sendMsg() {
+    let input = document.getElementById("userInput");
+    let chat = document.getElementById("chat");
+    if(input.value == "") return;
+    let userText = input.value;
+    chat.innerHTML += `<div class="msg user">👤 ${userText}</div>`;
+    chat.innerHTML += `<div class="msg ai" id="loading">🤖 Soch raha hun...</div>`;
+    input.value = "";
+    
+    try {
+        let res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": "Bearer " + API_KEY
+            },
+            body: JSON.stringify({
+                model: "llama-3.1-8b-instant",
+                messages: [{role: "user", content: userText}]
+            })
+        });
+        let data = await res.json();
+        let aiReply = data.choices[0].message.content;
+        document.getElementById("loading").innerHTML = `🤖 ${aiReply}`;
+    } catch(e) {
+        document.getElementById("loading").innerHTML = "🤖 Error aa gaya. Key check karo.";
+    }
+    chat.scrollTop = chat.scrollHeight;
+}
+</script>
